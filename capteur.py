@@ -1,11 +1,9 @@
-from kafka import *
+from confluent_kafka import Producer
 import datetime as dt
 import json
 import random
 import time
 import uuid
-
-
 
 def generate_transaction():
     transaction_types = ['achat', 'remboursement', 'transfert']
@@ -39,38 +37,14 @@ def generate_transaction():
 
     return transaction_data
 
+# Création du producteur Kafka
+conf = {'bootstrap.servers': "127.0.0.1:9092"}
+producer = Producer(**conf)
 
-
+# Envoi des données dans Kafka
 for _ in range(200):  # Vous pouvez ajuster le nombre de messages à générer
-
-    producer = KafkaProducer(bootstrap_servers=['127.0.0.1:9092'],
-                             value_serializer=lambda x: json.dumps(x).encode('utf-8'))
-    producer.send("transaction", generate_transaction())
+    producer.produce("transaction", json.dumps(generate_transaction()).encode('utf-8'))
     time.sleep(1)
 
-
-producer.close()
-
-#--------------------------------------------------------------------
-#                     MANIP SUR LES DF
-#--------------------------------------------------------------------
-#       convertir USD en EUR
-#       ajouter le TimeZone
-#       remplacer la date en string en une valeur date
-#       supprimer les transaction en erreur
-#       supprimer les valeur en None ( Adresse )
-
-
-
-# si ça vous gene faite mettez tout sur la meme partie ( en gros supprimer les sous structure pour tout mettre en 1er plan )
-# modifier le consumer avant
-
-
-
-# KAFKA PRODUCEUR
-# Reception des donnes en Pyspark ou en Spark scala
-# Manip
-# Envoie dans un bucket Minio ou sur hadoop pour les plus téméraire
-
-
-
+# Attendre que tous les messages soient envoyés
+producer.flush()
